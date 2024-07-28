@@ -146,12 +146,12 @@ boolean b = true;
     ```java
     // 使用传统for循环
     for (int i = 0; i < numbers.length; i++) {
-        //
+        // ...
     }
     
     // 使用range for循环
     for (int number : numbers) {
-        //
+        // ...
     }
     ```
 ### 2.3 类型转换
@@ -167,19 +167,161 @@ boolean b = true;
     double d = 9.78;
     int i = (int) d; // 强制将double转换为int
     ```
-
-### 2.4 引用类型
-* 当你将基本数据类型的量作为参数传递给函数时，传递的是这些值的副本。对这些副本进行的修改不会影响原始变量。
-* 当你要将引用数据类型（对象、数组）作为参数传递给函数时，**传递的是引用，而不是副本。** 使用`final`关键字修饰参数可以避免原始对象被修改。
+**【Java类型转换的注意事项】**
+* `int`类型不能直接转换为`boolean`类型。`boolean`类型只有两个值：`true`和`false`，而`int`类型可以有任何整数值。如果你想根据`int`值的某些特性（例如，是否为零）转换为`boolean`，你需要自己编写条件表达式。
+  * 在Java中，`if (anInteger) { ... }`是不合法的，因为Java的`if`语句需要一个`boolean`类型的表达式。**在Java中，我们不能像在某些其他语言（如C或JavaScript）中那样，将非布尔类型的值用作布尔表达式。**
+* Java语言中没有提供类似C++中`const_cast`的操作。在C++中，`const_cast`可以用来改变表达式的常量性，这在Java中是非法的，因此没有这样的操作。
+  * 在Java中，将方法参数声明为`final`意味着在方法体中不能改变该参数的引用，即不能重新为它赋值。但是，这并不阻止你修改这个对象的内部状态（即，它的字段或属性）。 例如，假设你有一个名为`Person`的类，该类有一个`name`字段，你可以在方法中改变`Person`对象的`name`，即使该对象的引用被声明为`final`：
     ```java
-    public void exampleMethod(final Object o) {
-        // x = 20; // 这会导致编译错误，因为x是final的
-        System.out.println(o);
+    class Person {
+        String name;
+      
+        Person(String name) {
+            this.name = name;
+        }
+    }
+  
+    public class Main {
+        public static void main(String[] args) {
+            Person person = new Person("Alice");
+            System.out.println("Before method call, name = " + person.name);
+            changeName(person);
+            System.out.println("After method call, name = " + person.name);
+        }
+  
+        static void changeName(final Person p) {
+            p.name = "Bob"; // 这是合法的
+            // p = new Person("Charlie"); // 这是非法的，因为 p 是 final 的
+        }
     }
     ```
+    如果想要避免这样的现象，可以使用**深拷贝**。**深拷贝是原始对象的完全复制，修改深拷贝不会影响原始对象。** 如果你将一个对象的深拷贝作为方法参数，那么即使方法修改了这个对象，也不会影响原始对象。在Java中，你可以使用各种方法来创建深拷贝，具体取决于你的需求和你的对象的复杂性。例如，你可以实现`Cloneable`接口并重写`clone`方法，或者使用序列化来创建深拷贝。
+* Java中也没有类似C++中的类型重解释（`reinterpret_cast`）或C风格的强制类型转换。Java的类型系统是更强、更严格的，其类型转换必须是类型兼容的，并且在运行时还会进行类型检查。这是Java语言安全性和鲁棒性设计的一部分。
 
-### 2.5 指针和地址？
+### 2.4 Java对变量的存储理解
+#### 对于基本类型
+```java
+int number = 5;
+```
+在这个例子中，JVM执行以下步骤：
+* 在栈内存中分配一块能够存储`int`类型数据的空间。
+* 在这块内存空间中存储值`3`。
+* 这块内存空间被标识符`number`标识，所以当我们在代码中写`number`，我们实际上是在引用这个内存位置的内容。
+
+#### 对于对象类型（参考`new`关键字）
+```java
+String str = new String("Hello");
+```
+当使用`new`创建一个对象时，JVM执行以下步骤：
+* `new String("Hello")`在堆内存中创建了一个新的`String`对象。
+* 这个新对象的内存地址被返回并赋值给`str`。JVM在栈内存中为`str`分配内存空间，并把返回的地址存储在这个空间中。
+* 因此，`str`成为这个新`String`对象的**引用**。`str`实际上是是字符串地址的标识。不过在使用`str`的时候，JVM会自动访问地址。
+
+#### 联系C++
+* 在C++中，把变量名理解为「标识」或「标签」是正确的。**一个引用就是一个位置的别名**。这种理解方式符合编程语言设计的预期。
+* 当然，在汇编层面，有时，一个引用可能占用一块新的内存空间，这和指针类似：
+  ```c++
+  int main() {
+      int a = 20;
+      int& b = a;
+      b++;
+  }
+  ```
+  对应的汇编代码是：
+  ```arm
+  _main:
+      sub	sp, sp, #16
+      
+      % 提前确定了a的地址为sp+12，存在x8寄存器中。
+      add	x8, sp, #12
+      
+      % int a = 20;
+      mov	w9, #20
+      str	w9, [sp, #12]
+      
+      % int b = &a;
+      str	x8, [sp]    % sp指向为b开辟的空间，其中存储a的地址。
+      
+      % b++;
+      ldr	x9, [sp]
+      ldr	w8, [x9]
+      add	w8, w8, #1
+      str	w8, [x9]    % 这里实际上是a++，符合实际。
+      
+      mov	w0, #0
+      add	sp, sp, #16
+      ret
+  ```
+* Java并不区分引用和指针，一般情况下我们只说引用。在Java的语境下，可能存在一点术语滥用。C++的引用和Java的引用**完全不同**，Java的引用实际上和C++的指针更相似，因为二者都「指向」一个位置，而非一个位置的别名。
+
+### 2.5 函数参数传递
+在Java中，基本类型（如`int`, `double`, `char`等）和引用类型的处理方式是**不同**的。
+
+在Java中，所有的非基本类型都被称为引用类型。这包括类（Class）、接口（Interface）、数组（Array）和枚举（Enum）。**引用类型的特点是，它们的值实际上是对存储在堆（Heap）中的对象或数组的引用，而不是实际的对象或数组本身。** 当你创建一个引用类型的对象（比如一个类的实例或一个数组）时，Java会在堆内存中为这个对象分配空间，**并返回一个指向这个内存空间的引用**（类似C的指针）。这个引用，而不是对象本身，就是你在代码中操作的值。
+
+**在Java中，对于基本类型和引用类型，Java都是按值传递的，即传递一个值的拷贝。对于基本类型，这个值就是基本类型的实际值，对于引用类型，这个值就是引用本身（也就是指向对象在内存中的指针）。**
+
+* 当你将一个基本类型量传递给函数时，如果函数试图修改它的值，那么原始对象中的那个值是**不会改变**的。
+* 当你将一个**包含引用类型**的对象传递给函数，**函数对这个引用类型的修改可能影响到原始对象**。如果你改变的是引用本身（即指向另一个不同的对象），那么这种改变并不会影响到原始对象。但是，如果你通过这个引用修改了所指向的对象的状态（比如改变一个对象的字段），那么这种改变会影响到原始对象。
+
+**【联系C++】** 在C++中：
+* 函数参数中基本数据类型都是按值传递的，这和Java相同。
+* 如果函数参数中有**引用类型**，从C++层面来讲（不考虑汇编），编译器会把这当作原始对象的新标识，使得函数直接操控其内容。不过在汇编层面，程序可能直接操作原始对象，也可能会在栈上开辟一块新空间存储引用内容的地址。
+* 如果函数参数中有**指针类型**，程序则在栈上开辟一块新空间存储指向的内容的地址。如果此指针参数也是一个指向对象的指针（类似`func(ptr_to_object)`）而非一个右值（如`func(&var)`），那这和Java中引用类型的参数传递方式最相似（指针的拷贝）。
+* Java和C++在内存管理上有很大差异。因此Java很难完全类比C++。
+
+### 2.6 指针和地址？
 在Java中**没有**像C或C++那样的显式指针和内存地址操作。Java是设计为内存安全的语言，旨在防止诸如内存泄漏和指针操作错误等常见问题。虽然你不能直接访问对象的内存地址，但Java提供了`System.identityHashCode()`方法，可以获得对象的HashCode，该HashCode在对象的生命周期内是唯一的，尽管它们并不直接对应实际内存地址。
+
+### 2.7 对象整体的拷贝类型
+**Java的函数参数（包括C++的函数传递）传递不是以下两种类型的任何一种，其只是指针的拷贝（本质上还是按值传递）。** 以下内容针对的是**赋值运算符和`clone`操作**。
+
+* 浅拷贝创建一个新对象，然后将原始对象的属性值复制到新对象。如果属性值是基本类型，如整数、字符串或布尔值，那么就直接复制这些值。但是，如果属性是引用类型（如数组、对象、函数等），那么复制的是这些引用的地址，而不是引用的实际内容。
+  ```java
+  class Person implements Cloneable {
+      String name;
+  
+      Person(String name) {
+          this.name = name;
+      }
+  
+      @Override
+      protected Object clone() throws CloneNotSupportedException {
+          return super.clone();
+      }
+  }
+  
+  // 使用浅拷贝
+  Person person1 = new Person("Alice");
+  Person person2 = (Person) person1.clone();
+  
+  person2.name = "Bob"; // 更改person2的name字段也会影响person1的name字段，因为它们指向的是同一个String对象
+  ```
+  `super.clone()`调用的是`Object`类中定义的`protected native Object clone() throws CloneNotSupportedException`方法，该方法的作用是创建并返回对象的一个副本。这个副本是通过复制原始对象在内存中的二进制流来创建的，因此得到的是一个全新的对象，其内容与原始对象完全相同。
+
+* 深拷贝创建一个新对象，并递归地复制原始对象的所有字段。**对于引用字段，深拷贝会创建一个新的对象，并复制引用的目标对象的所有字段，而不仅仅是复制引用。** 这意味着新对象和原始对象**不会共享任何**对象或值。
+  ```java
+  class Person implements Cloneable {
+      String name;
+  
+      Person(String name) {
+          this.name = name;
+      }
+  
+      @Override
+      protected Object clone() {
+          return new Person(new String(name)); // 手动创建一个新的String对象，实现深拷贝
+      }
+  }
+  
+  // 使用深拷贝
+  Person person1 = new Person("Alice");
+  Person person2 = (Person) person1.clone();
+  
+  person2.name = "Bob"; 
+  // 更改person2的name字段不会影响person1的name字段，因为它们指向的是两个不同的String对象
+  ```
+
 
 ## 三、运算符
 ```java
@@ -1666,3 +1808,55 @@ public class User implements Serializable {
 被`transient`关键字修饰的字段在对象序列化时**不会被保存下来**。这意味着如果你将一个对象序列化（比如写入到文件，或者通过网络发送），然后再反序列化（从文件读取，或者从网络接收），那么这个对象的`transient`字段将不会被恢复，而是采用其类型的默认值。对于对象类型，这个默认值是`null`；对于基本类型，例如`int`，`double`，这个默认值是`0`，`boolean`类型的默认值是`false`。
 
 `transient`关键字只影响序列化过程。在对象的生命周期内，即使属性被标记为`transient`，它仍然可以被正常地读取和写入。`transient`关键字只是告诉JVM在序列化或反序列化过程中忽略这个字段。
+
+
+
+---
+
+# JavaGuide_Advanced
+
+## A. `Integer`类的实现
+```java
+public final class Integer extends Number
+        implements Comparable<Integer>, Constable, ConstantDesc {
+  @Native public static final int   MIN_VALUE = 0x80000000;
+  @Native public static final int   MAX_VALUE = 0x7fffffff;
+  
+  // ...
+
+  public static final Class<Integer>  TYPE = (Class<Integer>) Class.getPrimitiveClass("int");
+
+  // All possible chars for representing a number as a String
+  static final char[] digits = {
+          '0' , '1' , '2' , '3' , '4' , '5' ,
+          '6' , '7' , '8' , '9' , 'a' , 'b' ,
+          'c' , 'd' , 'e' , 'f' , 'g' , 'h' ,
+          'i' , 'j' , 'k' , 'l' , 'm' , 'n' ,
+          'o' , 'p' , 'q' , 'r' , 's' , 't' ,
+          'u' , 'v' , 'w' , 'x' , 'y' , 'z'
+  };
+  
+  // ...
+
+  public static String toString(int i, int radix) {
+      // ...
+  }
+  
+  // ...
+}
+```
+
+`Comparable<>`接口只包括一个方法：
+```java
+public interface Comparable<T> {
+    public int compareTo(T o);
+}
+
+```
+
+`@Native`真的只是一个注解：
+```java
+@Retention(RetentionPolicy.SOURCE)
+public @interface Native {
+}
+```
