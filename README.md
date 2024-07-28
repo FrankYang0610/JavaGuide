@@ -38,10 +38,10 @@ JVM和核心类库的关系在**一定程度上**类似C++编译器和STL的关�
 * **即时编译（JIT）：** JVM会监控代码的执行，识别热点代码；对频繁执行的代码进行即时编译，**将字节码转换为本地机器码**。
 * **执行：** JVM解释执行字节码或运行编译后的本地代码。
 
-**【Java程序的最终状态】** Java代码最终在JVM (Java虚拟机)上运行。JVM本身是作为操作系统的一个进程运行的。JVM可以直接解释执行字节码。JIT也会在运行时将热点代码（频繁执行的代码）编译成本地机器码。最准确的说法是，**Java程序不会在编译时直接被编译为汇编或机器码。但在运行时，部分Java代码（尤其是热点代码）会被JIT编译器编译成汇编代码，然后转换为机器码以提高性能。** 
+**【Java程序的最终状态】** Java代码最终在JVM上运行。JVM本身是作为操作系统的一个进程运行的。JVM可以直接解释执行字节码。JIT也会在运行时将热点代码（频繁执行的代码）编译成本地机器码。最准确的说法是，**Java程序不会在编译时直接被编译为汇编或机器码。但在运行时，部分Java代码（尤其是热点代码）会被JIT编译器编译成汇编代码，然后转换为机器码以提高性能。** 
 
 ### 1.3 JVM的虚拟内存结构
-JVM (Java虚拟机) 的虚拟内存结构是Java程序运行的基础。它定义了Java程序在运行时如何使用内存。**Java程序直接与JVM交互，使用JVM提供的内存结构。** 而操作系统仅为JVM分配物理内存、管理JVM进程、提供底层系统调用支持，不涉及具体Java程序。JVM内存结构包括：
+JVM的虚拟内存结构是Java程序运行的基础。它定义了Java程序在运行时如何使用内存。**Java程序直接与JVM交互，使用JVM提供的内存结构。** 而操作系统仅为JVM分配物理内存、管理JVM进程、提供底层系统调用支持，不涉及具体Java程序。JVM内存结构包括：
 * 方法区（Method Area）： 
   * 存储类信息、常量、静态变量、即时编译器编译后的代码等。
   * 在JDK 8之前，这个区域也被称为"永久代"（PermGen）； **JDK 8及以后，被元空间（Metaspace）取代，并使用本地内存**。
@@ -89,7 +89,7 @@ JVM内存结构示意图如下：
 ### 1.4 `native`关键字
 `native`这个关键字对理解实现至关重要。它表示该方法是在平台特定的代码中实现的，通常用C或C++等其他编程语言编写。
 
-例如在`public static native Thread currentThread()`方法中，当Java虚拟机(JVM)启动时，它会加载包含本地方法实现的本地库，`currentThread()`的本地实现直接与底层操作系统交互，以获取有关当前线程的信息。以下是本地代码可能的简化伪代码表示：
+例如在`public static native Thread currentThread()`方法中，当JVM启动时，它会加载包含本地方法实现的本地库，`currentThread()`的本地实现直接与底层操作系统交互，以获取有关当前线程的信息。以下是本地代码可能的简化伪代码表示：
 
 ```c++
 JNIEXPORT jobject JNICALL Java_java_lang_Thread_currentThread(JNIEnv *env, jclass cls) {
@@ -104,7 +104,7 @@ JNIEXPORT jobject JNICALL Java_java_lang_Thread_currentThread(JNIEnv *env, jclas
 ```
 
 ### 1.5 JVM语言
-JVM语言是指能够在Java虚拟机(JVM)上运行的编程语言。**这些语言的源代码被编译成Java字节码**，然后可以在任何支持JVM的平台上运行。
+JVM语言是指能够在JVM上运行的编程语言。**这些语言的源代码被编译成Java字节码**，然后可以在任何支持JVM的平台上运行。
 
 常见的JVM语言包括：
 * Java：最原始和广泛使用的JVM语言。
@@ -298,7 +298,7 @@ do {
 ```
 
 ## 八、异常处理
-异常处理模型：
+### 8.1 异常处理模型：
 ```java
 try {
     int result = 10 / 0;
@@ -309,7 +309,7 @@ try {
 }
 ```
 
-### 8.1 内置异常列表
+### 8.2 内置异常列表
 Java中的异常大致可以分为两类：Checked Exceptions（受检异常）和Unchecked Exceptions（非受检异常）。Checked Exceptions必须在代码中显式地捕获或声明，而Unchecked Exceptions则由程序运行时抛出，不需要显式地捕获或声明。
 * **Checked Exceptions：** 之所以被称为“受检”异常，主要是因为编译器在编译期间会对这些异常进行检查和强制处理。具体来说，Java编译器要求程序必须显式地处理这些异常，要么通过捕获（`catch`）它们，要么通过声明（`throws`）将它们抛出。否则，代码将无法通过编译。
   * `ClassNotFoundException`: 类未找到异常。
@@ -351,7 +351,7 @@ Java中的异常大致可以分为两类：Checked Exceptions（受检异常）�
   * `NoClassDefFoundError`: 类定义未找到错误。
   * `UnknownError`: 未知错误。
 
-### 8.2 用户自定义的异常
+### 8.3 用户自定义的异常
 * **创建创建受检异常（Checked Exception）。** 受检异常需要继承自`Exception`类，通常要求方法声明抛出这些异常。
   ```java
   // 定义一个自定义的受检异常
@@ -436,6 +436,16 @@ Java中的异常大致可以分为两类：Checked Exceptions（受检异常）�
       public static void throwUncheckedException() {
           throw new MyUncheckedException("This is a custom unchecked exception.");
       }
+  }
+  ```
+
+### 8.4 `throw`和`throws`
+在Java中，`throw`和`throws`是两个关键字，它们都与异常处理有关，但是用法和目的不同。
+* `throw`是一个语句，用于显式地抛出一个异常。这个异常可以是Java内置的异常类型，也可以是你自定义的异常类型。**一旦抛出异常，程序的正常执行流程将被中断，并立即跳转到最近的适当的异常处理器（`catch`块）**。
+* `throws`是一个关键字，**用于声明一个方法可能会抛出哪些类型的异常**。这些异常类型是列在方法的声明部分的，紧跟在方法签名之后。比如：
+  ```java
+  public void readFile(String fileName) throws IOException {
+      // Method implementation...
   }
   ```
 
@@ -546,7 +556,7 @@ public class Person {
 （默认，即不使用修饰符）：在同一个包内可以访问。
 
 ### 10.2 主入口
-在Java程序中，主入口是`main`方法。`main`方法是Java应用程序的起点，JVM（Java虚拟机）会在启动应用程序时首先调用这个方法。`main`方法必须是`public`的、`static`的，并且返回类型是`void`，其参数是一个`String`类型的数组。
+在Java程序中，主入口是`main`方法。`main`方法是Java应用程序的起点，JVM会在启动应用程序时首先调用这个方法。`main`方法必须是`public`的、`static`的，并且返回类型是`void`，其参数是一个`String`类型的数组。
 
 `String[] args`: 这是一个字符串数组，用于接收命令行参数。当运行Java程序时，可以通过命令行向main方法传递参数，这些参数会被存储在这个数组中。
 
@@ -1372,7 +1382,7 @@ public class MyClass {
 }
 ```
 
-## 十七、多线程编程和异步 (尚未完成)
+## 十七、多线程和异步编程 (尚未完成)
 ### 17.1 多线程
 多线程是一种允许在一个程序中同时运行多个线程的编程技术。线程是一个轻量级的进程，它可以与其他线程共享进程的资源（如内存）。多线程编程使得程序可以同时执行多个任务，提高程序的效率和响应速度。
 
@@ -1405,7 +1415,7 @@ public class MyClass {
     }
     ```
 
-当多个线程访问共享资源时，可能会引发数据不一致的问题。线程同步是一种用于控制多个线程对共享资源访问的技术，通常使用`synchronized`关键字。
+当多个线程访问共享资源时，可能会引发数据不一致的问题。线程同步是一种用于控制多个线程对共享资源访问的技术，通常使用`synchronized`关键字。`synchronized`可以在多线程环境下保证共享资源的访问是互斥的，即在同一时刻只能有一个线程能访问该资源，防止出现数据不一致的问题。
 
 ```java
 class Counter {
@@ -1445,8 +1455,54 @@ public class SynchronizedExample {
 }
 ```
 
+### 17.2 `volatile` && 多线程的进一步理解
+`volatile`是一个关键字，用于修饰一个变量，**表明这个变量可能会被多个线程同时访问并修改**。`volatile`关键字能够保证变量的可见性和有序性。
 
-### 17.2 异步编程
+**【什么是可见性】** 可见性意味着当一个线程修改了一个`volatile`变量的值，新的值对所有其他线程来说都是可见的。换句话说，读操作总是能看到任何线程对`volatile`变量最后的写入。**在多线程环境中，如果一个线程修改了一个变量的值，其他线程可能无法立即看到这个修改。**这是因为为了提高性能，每个线程可能会在自己的本地内存中保存这个变量的一个副本。**`volatile`可以保证一个线程对变量的修改对所有其他线程都是可见的。**
+
+**【什么是有序性】** 在Java中，为了提高效率，**编译器和处理器可能会对代码进行重排序**。但是当两个操作之间存在数据依赖性时，这种重排序可能会导致问题。`volatile`可以禁止指令重排序。具体来说，当一个变量被声明为`volatile`后，编译器和处理器就不再对其相关的读写操作进行重排序。
+
+```java
+public class SharedData {
+    public volatile int counter = 0;
+}
+```
+
+在这个例子中，`counter`是一个`volatile`变量，这意味着当`counter`的值被一个线程修改后，新的值对其他所有线程都是可见的。然而，需要注意的是，`volatile`不能提供原子性。例如，下面的操作就不是原子的，即使`counter`是 `volatile`的：
+```java
+counter++;
+```
+
+这个操作实际上包含三个步骤：读取`counter`的值，将值加`1`，写回新的值。如果两个线程同时执行这个操作，它们可能会读取到同样的`counter`值，然后都将其加一，然后写回新的值。这样，`counter`就只增加了一次，而不是两次。这就是所谓的"**竞态条件**"。如果需要执行复合操作（比如增量操作），那么需要使用锁或其他同步机制来确保原子性。
+
+【联系**17.1**的例子】
+* 在**17.1**所示的例子中，**`count`变量是被`synchronized`方法`increment()`所保护的**，因此它并不需要被声明为 `volatile`。
+* 当一个线程进入一个`synchronized`方法或代码块时，它获取一个互斥锁，并且在它退出该方法或代码块时释放这个互斥锁。
+  * **当一个线程释放一个互斥锁时，Java内存模型保证它对共享变量的所有修改都将刷新到主内存。** 当一个线程获取一个互斥锁时，**Java内存模型保证它将看到所有先前已释放互斥锁的线程对共享变量的修改。** 
+  * 换句话说，当一个线程获取`synchronized`锁时，**它会从主内存中读取所有共享变量的最新值到自己的工作内存。** 同样，当线程释放 `synchronized`锁时，它会将其工作内存中所有更新过的共享变量的最新值刷新（写回）到主内存。这就是`synchronized`如何保证共享变量修改的可见性的。这个过程符合Java内存模型（JMM）中的**Happens-Before**原则。
+  * 在Java内存模型中，Happens-Before是一个非常重要的概念，它定义了两个操作之间的可见性——对于两个操作A和B，如果*A happens-before B*，那么A的所有结果对B都是可见的。如果两个操作之间没有Happens-Before关系，那么Java内存模型不能保证哪个操作先发生。
+* 因此，由于 `increment()`方法是`synchronized`的，`count`变量的所有修改都对所有线程可见，所以它不需要被声明为`volatile`。
+* 然而，如果`getCount()`方法可能被多个线程并发访问，并且你需要它总是返回`count`的最新值，那么你应该将`getCount()`方法也声明为`synchronized`，或者将`count`声明为`volatile`。否则，`getCount()`方法可能返回`count`的过时值。
+  * 即使线程A在`increment()`方法中修改了`count`的值并释放了锁（这将把`count`的最新值刷新到主内存），**另一个线程B在执行`getCount()`方法时可能仍然从其工作内存中读取`count`的过时值，而不是从主内存中读取最新的值**。这是因为`getCount()`方法并没有被声明为`synchronized`，所以它不会在执行时**强制**从主内存中读取`count`的值。
+
+**【哪些操作是原子的】**
+* 基本数据类型的读取和赋值：对于除了long和double以外的所有基本数据类型，读取和赋值操作都是原子的。这是因为这些操作都可以在一个CPU时钟周期内完成。
+* 所有引用的赋值操作：对于引用类型，赋值操作也是原子的。
+* 原子类：Java提供了一些原子类，如`AtomicInteger`，`AtomicLong`，`AtomicBoolean`等，它们的**各种操作**都是原子的。例如，`AtomicInteger`的`incrementAndGet`方法可以原子地增加整数的值。
+
+**【联系`synchronized`关键字】** `volatile`和`synchronized`都是Java中用于处理多线程环境下的可见性和同步问题的关键字，但它们的工作方式和使用场景有所不同。
+* 原子性
+  * **`synchronized`可以保证原子性。** 当你在一个方法或代码块上使用`synchronized`时，它可以保证在同一时间只有一个线程可以执行该方法或代码块。因此，它可以用来实现复杂的原子操作。
+  * **`volatile`不能保证原子性。** 它只能保证单个读取和写入操作是原子的。对于复合操作（例如增量操作），`volatile`无法保证其原子性。
+* 互斥锁
+  * **`synchronized`会对方法或代码块实施互斥锁**，使得在同一时间只有一个线程可以访问。
+  * **`volatile`并不使用锁**，因此没有`synchronized`的锁开销。
+* 可见性
+  * `synchronized`和`volatile`都可以保证可见性，即一个线程的修改对其他线程是可见的。**`synchronized`的可见性是通过进入和退出同步块（获取和释放锁）来实现的。**
+  * **`volatile`的可见性是通过在每次访问变量时直接从主内存进行读取，每次修改变量后立即刷新到主内存来实现的。**
+* 如果需要执行的操作是一个复合操作，那么你应该使用`synchronized`来保证这个操作的原子性。如果只是读取和写入单个变量，而且不关心操作的原子性，那么可以使用`volatile`。
+
+### 17.3 异步编程
 异步编程是一种编程范式，**允许程序在等待某个操作完成时，不阻塞当前线程，而是继续执行其他操作**。Java中常用的异步编程方式包括`Future`和`CompletableFuture`。
 
 * 使用`Future`
@@ -1518,3 +1574,42 @@ public class SynchronizedExample {
       }
   }
   ```
+
+## 十八、其他Java关键字
+### 18.1 `assert`
+`assert`用于进行断言。断言是一种编程手段，使得程序员可以在代码中插入一些检查点，以测试假设的条件是否为真。如果断言的条件为真，程序会正常运行。但如果断言的条件为假，程序会抛出一个`AssertionError`。Java 中的 assert 语句有两种形式：
+* `assert Expression1;`
+* `assert Expression1 : Expression2;`
+```java
+public void deposit(double value) {
+    assert value > 0 : "Deposit value must be greater than 0";
+    balance += value;
+}
+```
+
+在这个例子中，我们假设存款值必须大于0。如果这个假设不成立，那么会抛出一个`AssertionError`，并带有错误消息 `Deposit value must be greater than 0`。
+
+### 18.2 `strictfp`
+`strictfp`是Java中的一个关键字，用于精确控制浮点计算的精度。当你在一个类或者方法上使用`strictfp`关键字，那么**在该类或方法中的所有浮点计算**都将严格遵循IEEE 754规范。
+
+IEEE 754规范定义了浮点数的表示方法、舍入方式、特殊值（如`NaN`和无穷大）、异常（如除以零和溢出）等内容。在严格模式下，所有的浮点运算都会精确地遵循这个规范，以提供可预见的、跨平台的结果。
+
+### 18.3 `transient`
+`transient`是一个关键字，用于表明某个对象的属性不应该被序列化。
+
+序列化是将对象的状态（即其属性）转换为字节流的过程，以便将其保存到磁盘上，或者通过网络将其发送到另一个运行Java的机器上。如果一个对象的某个属性被标记为`transient`，那么这个属性就不会参与到序列化过程中，也就不会被保存到磁盘或通过网络传输。
+
+```java
+public class User implements Serializable {
+    private String name;
+    private transient String password;
+    
+    // rest of the class...
+}
+```
+
+在这个例子中，`User`类有两个属性：`name`和`password`。当我们尝试序列化一个`User`对象时，`name`属性会被序列化，但是`password`属性由于被标记为`transient`，所以不会被序列化。
+
+被`transient`关键字修饰的字段在对象序列化时**不会被保存下来**。这意味着如果你将一个对象序列化（比如写入到文件，或者通过网络发送），然后再反序列化（从文件读取，或者从网络接收），那么这个对象的`transient`字段将不会被恢复，而是采用其类型的默认值。对于对象类型，这个默认值是`null`；对于基本类型，例如`int`，`double`，这个默认值是`0`，`boolean`类型的默认值是`false`。
+
+`transient`关键字只影响序列化过程。在对象的生命周期内，即使属性被标记为`transient`，它仍然可以被正常地读取和写入。`transient`关键字只是告诉JVM在序列化或反序列化过程中忽略这个字段。
