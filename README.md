@@ -247,6 +247,29 @@ public class ScannerExample {
 ```
 **【为什么`System.in`不能直接处理输入】** `System.in`直接提供的读取方法是`read()`，**它一次读取一个字节**，并返回一个整数值（0到255之间的字节值）。这对于读取文本输入非常不方便，因为它不会自动处理字符和字符串。
 
+**【如何处理输入的数字】** `Scanner.nextLine()`方法返回的是一个`String`类型的值，不会直接转换数字。然而，你可以使用`Integer.parseInt()`或`Double.parseDouble()`之类的方法将这个字符串转换为一个整数或浮点数。
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter a number: ");
+        String line = scanner.nextLine();
+
+        // 转换为整数
+        int num = Integer.parseInt(line);
+        System.out.println("The number as an integer is " + num);
+
+        // 转换为浮点数
+        double d = Double.parseDouble(line);
+        System.out.println("The number as a double is " + d);
+    }
+}
+```
+
+**【什么是`Integer`和`Double`】** `Integer`是一个封装了`int`原始数据类型的类。该类提供了许多用于操作`int`的方法，例如比较、转换为其他类型、进行位操作等等。同样，`Integer`类也允许你将`int`值视为一个对象。这在很多情况下是非常有用的，例如，只有对象才能被添加到Java的集合类中（如`ArrayList`和`HashSet`）。
+
 ## 六、控制结构
 ```java
 if (number > 0) {
@@ -1209,7 +1232,7 @@ boolean isBlank = "  ".isBlank();  // true (Java 11+)
 ```
 
 ### 15.2 `ArrayList`
-`ArrayList`是Java集合框架中最常用的类之一，它实现了List接口，底层使用数组实现。`ArrayList`提供了**动态数组**的功能，能够根据需要自动调整大小。以下是`ArrayList`的主要特点和用法:
+`ArrayList`是Java集合框架中最常用的类之一，它实现了`List`接口，底层使用数组实现。`ArrayList`提供了**动态数组**的功能，能够根据需要自动调整大小。以下是`ArrayList`的主要特点和用法:
 ```java
 // 创建ArrayList
 ArrayList<String> list = new ArrayList<>();
@@ -1243,6 +1266,9 @@ for (String item : list) {
 // 清空列表
 list.clear();
 ```
+
+**在Java中，`ArrayList`只能存储对象，不能直接存储基本数据类型，如`int`、`char`、`boolean`等。** 然而，Java提供了**封装类**（如`Integer`、`Character`、`Boolean`等），可以将基本类型封装为对象，这样就可以将它们存储在`ArrayList`中了。
+
 当在`ArrayList`末尾添加元素时（使用`add(E e)`方法），如果当前容量足够，直接添加即可，时间复杂度为`O(1)`。如果当前容量不足，`ArrayList`会创建一个更大的新数组（通常是当前大小的1.5倍），然后将所有元素复制到新数组中，这个过程的时间复杂度为`O(n)`。当在指定位置添加元素时（使用`add(int index, E element)`方法），需要将该位置及其后面的所有元素向后移动一位，这个过程也涉及到数组复制，时间复杂度为`O(n)`。
 
 ### 15.3 `Arrays`
