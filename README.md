@@ -298,7 +298,7 @@ do {
 ```
 
 ## 八、异常处理
-### 8.1 异常处理模型：
+### 8.1 异常处理模型
 ```java
 try {
     int result = 10 / 0;
@@ -615,6 +615,33 @@ public class Employee extends Person {
     }
 }
 ```
+
+在Java中，你不能直接继才两个基类。**Java不支持多重继承**，这是为了防止各种问题和复杂性，例如二义性，由于两个父类可能有相同的方法或属性。
+
+【`super`关键字】`super`关键字用于：
+* 调用父类的构造函数：你可以使用`super()`在子类的构造函数中调用父类的构造函数。**这必须是在构造函数的第一行。**
+* 调用父类的方法或访问属性：你可以使用`super.method()`或`super.property`来访问父类的方法或属性。
+* 如果你的类实现了多个接口，并且这些接口有默认方法，你可以使用`InterfaceName.super.method()`的形式来调用指定接口的默认方法。这种情况下，super关键字是用来解决默认方法之间的冲突的。
+  ```java
+  interface InterfaceA {
+      default void doSomething() {
+          System.out.println("InterfaceA's implementation");
+      }
+  }
+  
+  interface InterfaceB {
+      default void doSomething() {
+          System.out.println("InterfaceB's implementation");
+      }
+  }
+  
+  class MyClass implements InterfaceA, InterfaceB {
+      public void doSomething() {
+          InterfaceA.super.doSomething(); // Calls InterfaceA's implementation
+          InterfaceB.super.doSomething(); // Calls InterfaceB's implementation
+      }
+  }
+  ```
 
 ### 10.5 多态
 * 方法重载
