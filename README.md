@@ -115,7 +115,6 @@ JVM语言是指能够在Java虚拟机(JVM)上运行的编程语言。**这些语
 * JRuby：Ruby语言的JVM实现。
 * Jython：Python语言的JVM实现。
 
-
 ## 二、基本数据类型
 ### 2.1 基本数据类型
 * `byte`(1 byte)，`short`(2 byte)，`int`(4 byte)，`long`(8 byte)。
@@ -480,6 +479,27 @@ public class Person {
 }
 ```
 
+### `new`与不同的引用类型
+接口（Interface，见**10.7**）是一个特殊的类型，你不能直接用`new`运算符来创建接口的实例。接口是一种规定了某些方法必须被实现的契约，但它并不提供这些方法的具体实现。因此，你不能直接创建一个接口的实例，**你需要创建一个实现了该接口的类的实例**：
+```java
+interface MyInterface {
+    void doSomething();
+}
+
+class MyClass implements MyInterface {
+    public void doSomething() {
+        System.out.println("Doing something...");
+    }
+}
+
+MyInterface mi = new MyClass();
+mi.doSomething();  // Prints "Doing something..."
+```
+
+`MyInterface mi = new MyClass()`和`MyClass mi = new MyClass()`两者都创建了一个`MyClass`的对象，**但是它们引用该对象的方式不同**。
+
+在`MyInterface mi = new MyClass()`这行代码中，我们创建了`MyClass`的一个实例，并将其引用赋给了一个`MyInterface`类型的变量`mi`。这意味着我们可以通过`mi`变量访问`MyClass`实现的所有`MyInterface`接口的方法。**然而，我们不能直接通过`mi`访问`MyClass`的其他方法（即那些没有在`MyInterface`中定义的方法），除非我们进行类型转换**。
+
 ## 十、类（包括函数）
 类为创建对象提供了模板，而对象是类的实例。
 ```java
@@ -570,12 +590,12 @@ public class Employee extends Person {
     private double salary;
 
     public Employee(String name, int age, double salary) {
-        super(name, age); // 调用父类的构造函数
+        super(name, age); // 调用基类的构造函数
         this.salary = salary;
     }
 
     public void display() {
-        super.display(); // 调用父类的方法
+        super.display(); // 调用基类的方法
         System.out.println("Salary: " + salary);
     }
 
@@ -758,7 +778,7 @@ public class Car implements Movable { // 这里必须用implements
     ```
 
 ### 10.9 类的类型转换
-* **向上转型是指将子类对象转换为父类类型。这种类型转换是自动的**，不需要显式的类型转换操作符。向上转型通常用于多态性（polymorphism），因为父类引用可以指向任何子类对象。
+* **向上转型是指将派生类对象转换为基类类型。这种类型转换是自动的**，不需要显式的类型转换操作符。向上转型通常用于多态性（polymorphism），因为基类引用可以指向任何子类对象。
     ```java
     class Animal {
         public void makeSound() {
@@ -781,7 +801,7 @@ public class Car implements Movable { // 这里必须用implements
         }
     }
     ```
-* **向下转型是指将父类对象转换为子类类型**。向下转型需要显式的类型转换操作符，并且在运行时可能会抛出`ClassCastException`，因此需要特别小心。
+* **向下转型是指将基类对象转换为派生类类型**。向下转型需要显式的类型转换操作符，并且在运行时可能会抛出`ClassCastException`，因此需要特别小心。
     ```java
     class Animal {
         public void makeSound() {
@@ -818,12 +838,15 @@ public class Car implements Movable { // 这里必须用implements
         Dog dog = (Dog) animal;
         // 安全的向下转型
     }
-    ```和
+    ```
+**【为什么向下转型不安全】** 
+* **基类可能不包含派生类的所有属性和方法**。如果程序试图访问这些不存在的属性或方法，将会抛出运行时异常。
+* 向下转换可能违反多态性的原则。在多态中，派生类对象可以赋值给基类对象，但基类对象不能直接赋值给派生类对象，除非确实是派生类实例。否则，运行时将出现异常。
 
-## 十一、lambda表达式
-Java的Lambda 表达式是Java 8引入的一种新特性，旨在简化代码，使其更加简洁和易读。Lambda 表达式本质上是一种匿名函数，可以作为参数传递给方法或存储在变量中。它们主要用于简化函数式编程，特别是在处理集合和流操作时。
+## 十一、Lambda表达式
+Java的Lambda表达式是Java 8引入的一种新特性，旨在简化代码，使其更加简洁和易读。Lambda表达式本质上是一种匿名函数，可以作为参数传递给方法或存储在变量中。它们主要用于简化函数式编程，特别是在处理集合和流操作时。
 
-Lambda 表达式的基本语法如下：
+Lambda表达式的基本语法如下：
 ```java
 (parameters) -> expression;
 // 或者
@@ -832,13 +855,13 @@ Lambda 表达式的基本语法如下：
 `parameters`：参数列表，可以为空、一个参数或多个参数。\
 `expression`：一个简单的表达式，如果有多条语句则使用大括号包裹。
 
-#### 示例 1：无参数的 Lambda 表达式
+#### 示例 1：无参数的Lambda表达式
 ```java
 Runnable runnable = () -> System.out.println("Hello, Lambda!");
 new Thread(runnable).start();
 ```
 
-#### 示例 2：使用 Lambda 表达式进行集合排序
+#### 示例 2：使用Lambda表达式进行集合排序
 ```java
 List<String> list = Arrays.asList("b", "a", "d", "c");
 Collections.sort(list, (s1, s2) -> s1.compareTo(s2));
@@ -1008,7 +1031,7 @@ public class FileReadExample {
 
 **字节流和字符流**：字节流是以字节为单位进行读写操作的IO流。它直接处理二进制数据，不关心字符编码；字符流是以字符为单位进行读写操作的IO流，它处理文本数据，会考虑字符编码。
 
-**【`InputStreamReader`和`Reader`类】** `InputStreamReader`类用于将字节流（原始二进制文件，`InputStream`）转换为字符流（字符文件，`Reader`）。它是字节流和字符流之间的桥梁，通常用于读取二进制数据并将其转换为字符数据。`InputStreamReader`通常与`BufferedReader`结合使用，以提供高效的字符读取功能。`InputStreamReader`类的parent为`Reader`类。
+**【`InputStreamReader`和`Reader`类】** `InputStreamReader`类用于将字节流（原始二进制文件，`InputStream`）转换为字符流（字符文件，`Reader`）。它是字节流和字符流之间的桥梁，通常用于读取二进制数据并将其转换为字符数据。`InputStreamReader`通常与`BufferedReader`结合使用，以提供高效的字符读取功能。`InputStreamReader`类的基类为`Reader`类。
 * ```java
     public class InputStreamReader extends Reader { ... }
     public abstract class Reader implements Readable, Closeable { ... }
@@ -1091,7 +1114,7 @@ public class BinaryFileWriteExample {
 
 ## 十五、常用类
 ### 15.1 `String`
-参考第十章。
+参考**第十章**。
 ```java
 // 创建字符串
 String str1 = "Hello";
@@ -1314,9 +1337,43 @@ Math.exp(1);          // e的1次方
 Math.random();        // 返回0.0到1.0之间的随机数
 ```
 
+## 十六、注解
+在Java中，`@`是一个特殊符号，通常用于注解 (Annotations)。它不是一个运算符，而是一种**语法特性**，用于向代码添加元数据。这些元数据可以在编译时或运行时被访问，以影响程序的行为。
 
-## 十六、多线程编程和异步 (尚未完成)
-### 16.1 多线程
+Java提供了一些内置的注解，例如：
+* `@Override`: 该注解用于方法，表示该方法覆盖了父类的方法。
+* `@Deprecated`: 该注解用于表示某个程序元素（类、方法等）已过时。
+* `@SuppressWarnings`: 该注解用于告诉编译器忽略指定的警告。
+* `@FunctionalInterface`: 该注解用于表示一个接口是一个函数式接口，也就是说，它只有一个抽象方法。
+
+**【什么是函数式接口】** 函数式接口是一种特殊的接口，它只包含**一个**抽象方法。Java 8引入了这个概念，以支持新的函数式编程特性，如Lambda表达式和方法引用。函数式接口可以包含Java `Object`类中的公共方法，如`equals`，`hashCode`，`toString`等，这些方法不会计入抽象方法的数量。这是因为任何一个Java类都会默认继承`Object`类，所以它们并不会增加抽象方法的数量。
+```java
+@FunctionalInterface
+public interface MyFunctionalInterface {
+    void execute();
+}
+
+MyFunctionalInterface fi = () -> System.out.println("Executing...");
+fi.execute();  // 输出 "Executing..."
+```
+
+除了这些内置注解，用户还可以自定义注解。例如：
+```java
+public @interface MyAnnotation {
+  String value() default "";
+}
+```
+
+然后你可以在代码中如下使用：
+```java
+@MyAnnotation("Hello, world!")
+public class MyClass {
+  // ...
+}
+```
+
+## 十七、多线程编程和异步 (尚未完成)
+### 17.1 多线程
 多线程是一种允许在一个程序中同时运行多个线程的编程技术。线程是一个轻量级的进程，它可以与其他线程共享进程的资源（如内存）。多线程编程使得程序可以同时执行多个任务，提高程序的效率和响应速度。
 
 在Java中，有两种主要方式创建线程：
@@ -1389,7 +1446,7 @@ public class SynchronizedExample {
 ```
 
 
-### 16.2 异步编程
+### 17.2 异步编程
 异步编程是一种编程范式，**允许程序在等待某个操作完成时，不阻塞当前线程，而是继续执行其他操作**。Java中常用的异步编程方式包括`Future`和`CompletableFuture`。
 
 * 使用`Future`
