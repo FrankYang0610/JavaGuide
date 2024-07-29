@@ -1656,7 +1656,7 @@ public class MyClass {
 }
 ```
 
-## 十七、多线程和异步编程 (尚未完成)
+## 十七、多线程和异步编程
 ### 17.1 多线程
 多线程是一种允许在一个程序中同时运行多个线程的编程技术。线程是一个轻量级的进程，它可以与其他线程共享进程的资源（如内存）。多线程编程使得程序可以同时执行多个任务，提高程序的效率和响应速度。
 
@@ -1777,52 +1777,17 @@ counter++;
 * 如果需要执行的操作是一个复合操作，那么你应该使用`synchronized`来保证这个操作的原子性。如果只是读取和写入单个变量，而且不关心操作的原子性，那么可以使用`volatile`。
 
 ### 17.3 异步编程
-异步编程是一种编程范式，**允许程序在等待某个操作完成时，不阻塞当前线程，而是继续执行其他操作**。Java中常用的异步编程方式包括`Future`和`CompletableFuture`。
+异步编程是一种编程范式，**允许程序在等待某个操作完成时，不阻塞当前线程，而是继续执行其他操作**。异步操作在未来的某个时间点完成，而不是立即完成。当异步操作完成时，通过某种机制（如回调函数、`Future`对象、事件等）通知调用方或处理结果。
 
-* 使用`Future`
-  ```java
-  import java.util.concurrent.Callable;
-  import java.util.concurrent.ExecutionException;
-  import java.util.concurrent.ExecutorService;
-  import java.util.concurrent.Executors;
-  import java.util.concurrent.Future;
-  
-  public class FutureExample {
-      public static void main(String[] args) {
-          ExecutorService executor = Executors.newSingleThreadExecutor(); 
-          // 使用Executors类的newSingleThreadExecutor方法创建一个单线程的执行服务（线程池）。
-          
-          Callable<Integer> task = () -> {
-              Thread.sleep(2000);
-              return 123;
-          };
-          // 创建一个Callable对象，Callable是一个带有返回值的任务。这个任务会睡眠2秒，然后返回整数123。
-          
-          Future<Integer> future = executor.submit(task);
-          // 将Callable任务提交给执行服务，返回一个Future对象。Future用于表示异步计算的结果。
-  
-          while (!future.isDone()) { // 可以执行其他任务
-              System.out.println("Task is not done yet...");
-              try {
-                  Thread.sleep(500);  // 模拟其他任务执行
-              } catch (InterruptedException e) {
-                  e.printStackTrace();
-              }
-          }
-          
-          try {
-              Integer result = future.get();  // 阻塞直到任务完成
-              System.out.println("Result: " + result);
-          } catch (InterruptedException | ExecutionException e) {
-              e.printStackTrace();
-          } finally {
-              executor.shutdown();
-          }
-      }
-  }
-  ```
+**【异步和多线程的异同】** 
+* 异步是一种编程模型，允许程序在**等待**某个操作完成的同时继续执行其他操作。多线程是一种并发执行的方法，允许多个线程（执行路径）同时运行。
+* 异步可以实现并发（同一**时间间隔**内执行多个任务），但不一定是并行（同一**时刻**同时执行多个任务）的。多线程可以实现真正的并行执行（在多核系统上）。
+  * 异步通常使用 **事件循环（event loop）** 机制。在单线程环境中，事件循环允许程序在等待某个操作（如I/O）时切换到其他任务，而不是一直等待。在单线程异步模型中（如Node.js的默认模型），虽然可以同时处理多个任务，**但在任何给定的时刻，只有一个任务在实际执行。这就是并发但不并行。**
+* 异步主要目的是提高程序的响应性和效率，特别是在处理I/O操作时。多线程主要目的是实现真正的并行处理，提高程序的整体吞吐量。
+* 异步特别适合I/O密集型任务，如网络请求、文件操作等。多线程特别适合CPU密集型任务，可以充分利用多核处理器。
 
-* 使用`CompletableFuture`：`CompletableFuture`提供了更强大的异步编程支持，包括链式操作、组合多个异步任务等。
+Java中常用的异步编程方式包括`Future`和`CompletableFuture`。
+* 使用`CompletableFuture`：`CompletableFuture`提供了更直观和更强大的异步编程支持，包括链式操作、组合多个异步任务等。
   ```java
   import java.util.concurrent.CompletableFuture;
   import java.util.concurrent.ExecutionException;
@@ -1839,15 +1804,57 @@ counter++;
           });
           
           future.thenAccept(result -> System.out.println("Result: " + result));
+          // 这一行是异步的。它"注册"了一个回调函数，当future完成时会被调用。这个操作本身不会阻塞主线程。
+          // 下面的代码会继续执行，在异步结束后这个“注册”的函数会被自动执行。
+  
+          // 其他操作...
           
           try {
-              future.get();  // 主线程等待异步任务完成
+              future.get();  // 等待异步任务完成，确保异步任务完成再继续
           } catch (InterruptedException | ExecutionException e) {
               e.printStackTrace();
           }
       }
   }
   ```
+
+* 使用`Future`，`Future`是`CompletableFuture`的基类。
+  ```java
+  import java.util.concurrent.Callable;
+  import java.util.concurrent.ExecutionException;
+  import java.util.concurrent.ExecutorService;
+  import java.util.concurrent.Executors;
+  import java.util.concurrent.Future;
+  
+  public class FutureExample {
+      public static void main(String[] args) {
+          ExecutorService executor = Executors.newSingleThreadExecutor(); 
+          // 使用Executors类的newSingleThreadExecutor方法创建一个单线程的执行服务（线程池）。
+          
+          Callable<Integer> task = () -> {
+              Thread.sleep(2000);
+              return 123;
+          };
+          // Callable对象是一个带有返回值的任务。
+          
+          Future<Integer> future = executor.submit(task);
+          // 将Callable任务提交给执行服务，返回一个Future对象。Future用于表示异步计算的结果。
+          // 这就是“注册”的函数。
+  
+          // 可以执行其他任务
+          
+          try {
+              Integer result = future.get();  // 阻塞直到任务完成
+              System.out.println("Result: " + result);
+          } catch (InterruptedException | ExecutionException e) {
+              e.printStackTrace();
+          } finally {
+              executor.shutdown();
+          }
+      }
+  }
+  ```
+
 
 ## 十八、其他Java关键字
 ### 18.1 `assert`
