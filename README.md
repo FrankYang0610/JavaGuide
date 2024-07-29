@@ -714,11 +714,35 @@ public class Person {
     }
 }
 ```
-### 10.1 访问控制
+### 10.1 访问控制【参见**13.2**】
 * `public`：任何地方都可以访问。
 * `private`：只有在同一个类内部可以访问。
 * `protected`：在同一个包内或通过继承可以访问。
 （默认，即不使用修饰符）：在同一个包内可以访问。
+
+通常，一个公共类（`public class`）应该被保存在一个与类名相同的`.java`文件中。 例如，`class MyClass`应该保存在`MyClass.java`文件中。一个`.java`文件可以包含多个类定义。但只能有一个`public`类，且该`public`类的名称必须与文件名相同。Java文件的位置通常反映了类的包结构。例如，`com.example.MyClass`类应该位于`com/example/MyClass.java`文件中。
+
+在Java中，顶级类（即直接在`.java`文件中定义的类）只能是`public`或者`package-private`（不加任何访问控制符）。不能将顶级类声明为`private`或`protected`。`package-private`类只在同一个包内可见。
+
+```java
+// 这是允许的：package-private 顶级类
+class PackagePrivateClass {
+    // 类的内容
+}
+
+// 这是允许的：public 顶级类
+public class PublicClass {
+    // 私有嵌套类
+    private class PrivateNestedClass {
+        // 类的内容
+    }
+}
+
+// 这是不允许的：private 顶级类
+// private class PrivateTopLevelClass {  // 编译错误
+//     // 类的内容
+// }
+```
 
 ### 10.2 主入口
 在Java程序中，主入口是`main`方法。`main`方法是Java应用程序的起点，JVM会在启动应用程序时首先调用这个方法。`main`方法必须是`public`的、`static`的，并且返回类型是`void`，其参数是一个`String`类型的数组。
@@ -759,7 +783,7 @@ public class Person {
     ```
 
 ### 10.4 继承（is-a关系）
-通过`extends`关键字来实现。继承使得一个类可以继承另一个类的属性和方法。
+通过`extends`关键字来实现。继承使得一个类可以继承另一个类的属性和方法。派生类无法访问基类的私有成员，只能访问其`public`和`protected`成员。
 ```java
 public class Employee extends Person {
     private double salary;
@@ -1133,6 +1157,7 @@ class NamePrinter<T extends HasName> {
 ```
 
 ## 十三、多文件编程 / 包管理
+### 13.1 多文件编程
 假设我们有一个简单的项目，其中包含以下三个文件： `Main.java`、`Person.java`和`Utils.java`：
 * `Person.java`：
     ```java
@@ -1206,6 +1231,60 @@ class NamePrinter<T extends HasName> {
     java com.example.Main // 运行主类
     ```
 * 如果根目录下直接就是三个`.java`文件，那么就不需要`package`和`import`关键字。
+
+### 13.2 包管理
+包（package）是Java中用于组织和管理相关类和接口的机制。它们在Java程序设计中扮演着重要角色。**包是一种命名空间机制，用于将相关的类、接口和子包组织在一起。** 它们类似于文件系统中的文件夹，用于组织和分类Java代码。一个包通常包含多个`.java`源文件。每个源文件可以定义一个或多个类或接口。同一个包中的所有源文件都应该在文件开头有**相同的**包声明。所有属于同一包的文件通常位于同一目录下。
+
+包名通常使用小写字母。常用的命名方式是使用公司的域名倒序，如`com.example.project`。在Java源文件的开头使用`package`关键字声明包。 例如：`package com.example.myproject;`。
+
+使用`import`语句可以导入其他包中的类。例如：`import java.util.ArrayList;`。
+
+包的结构通常对应于文件系统的目录结构。例如，`com.example.myproject`包对应于`com/example/myproject`目录。不过这不是强制的，理论上，包的结构可以不完全对应系统目录，但在实践中，这种做法通常**不被推荐**，而且可能会导致一些问题，尤其是当IDE默认包的结构对应系统目录的时候。
+
+包私有（默认）访问级别：同一包内的类可以相互访问。`public`成员可以被任何类访问。`protected`成员可以被同包类和任何派生类访问。`private`成员只能在声明它们的类内部访问。 Java中的访问修饰符从最严格到最宽松的顺序是: `private -> 默认(包私有) -> protected -> public`。
+
+```java
+package com.example;
+
+public class Base {
+    private int privateVar;
+    int defaultVar;
+    protected int protectedVar;
+    public int publicVar;
+}
+
+package com.example;
+
+class SamePackageClass {
+    void method() {
+        Base b = new Base();
+        // b.privateVar; // 不可访问
+        b.defaultVar;    // 可以访问（同包）
+        b.protectedVar;  // 可以访问（同包）
+        b.publicVar;     // 可以访问
+    }
+}
+
+package com.another;
+
+class DifferentPackageSubclass extends Base { 
+    void method() {
+        // this.privateVar; // 不可访问
+        // this.defaultVar; // 不可访问（不同包）
+        this.protectedVar;  // 可以访问（派生类）
+        this.publicVar;     // 可以访问
+    }
+}
+```
+
+包导入**不具有传递性**：如果包C导入包B，它不会自动导入包A，即使包B导入了包A。
+
+包的目的有：
+* 避免命名冲突：不同包中的类可以有相同的名称。
+* 控制访问：包提供了一个访问控制的边界。
+* 更好的组织：让代码结构更清晰，便于管理和维护。
+
+编译时需要指定包的路径。运行时需要正确设置类路径（classpath）。
 
 ## 十四、文件读写
 ### 14.1 读文件
