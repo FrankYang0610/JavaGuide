@@ -1937,7 +1937,6 @@ public final class Integer extends Number
 public interface Comparable<T> {
     public int compareTo(T o);
 }
-
 ```
 
 `@Native`真的只是一个注解：
