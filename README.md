@@ -217,6 +217,11 @@ String str = new String("Hello");
 * 这个新对象的内存地址被返回并赋值给`str`。JVM在栈内存中为`str`分配内存空间，并把返回的地址存储在这个空间中。
 * 因此，`str`成为这个新`String`对象的**引用**。`str`实际上是是字符串地址的标识。不过在使用`str`的时候，JVM会自动访问地址。
 
+举一个更好的例子，在Java中，数组的实现涉及以下几点：
+* 对象头：Java数组在堆上分配，包含对象头信息，其中包括类型标识和数组长度等元数据。
+* 数组数据：紧跟对象头之后，是数组的实际数据。
+* 引用：在栈上，变量保存的是对数组对象的引用（指针），而不是数组本身。
+
 #### 联系C++
 * 在C++中，把变量名理解为「标识」或「标签」是正确的。**一个引用就是一个位置的别名**。这种理解方式符合编程语言设计的预期。
 * 当然，在汇编层面，有时，一个引用可能占用一块新的内存空间，这和指针类似：
@@ -896,9 +901,46 @@ public class Car implements Movable { // 这里必须用implements
         System.out.println("Car is moving");
     }
 }
+``` 
+
+### 10.8 `final`类、`sealed`类和`permits`关键字
+`final`类都是不能被继承的类。其目的是确保类的实现不被修改或扩展：
+```java
+public final class ImmutableClass {
+    private final int value;
+
+    public ImmutableClass(int value) {
+        this.value = value;
+    }
+
+    public int getValue() {
+        return value;
+    }
+}
 ```
 
-### 10.8 友元的实现
+`sealed`类限制哪些类可以继承它。 其目的是提供更好的控制和安全性。
+其必须使用`permits`关键字指定允许的子类。子类选项可以为：
+* `final`: 不能再被继承。
+* `sealed`: 继续限制其子类。
+* `non-sealed`: 可以被自由继承。
+
+```java
+public sealed class Shape permits Circle, Square {
+    // 类的实现
+}
+
+public final class Circle extends Shape {
+    // Circle的实现
+}
+
+public final class Square extends Shape {
+    // Square的实现
+}
+```
+
+
+### 10.9 友元的实现
 在 Java 中没有直接的友元（friend）机制，这种机制是C++中的一种特性，允许一个类访问另一个类的私有和保护成员。尽管Java没有这种机制，但可以通过设计模式和访问控制来实现类似的功能。
 
 **在下面的语境中，`FriendClass`是要访问`FriendlyClass`私有成员的类。**
@@ -1003,7 +1045,7 @@ public class Car implements Movable { // 这里必须用implements
     }
     ```
 
-### 10.9 类的类型转换
+### 10.10 类的类型转换
 * **向上转型是指将派生类对象转换为基类类型。这种类型转换是自动的**，不需要显式的类型转换操作符。向上转型通常用于多态性（polymorphism），因为基类引用可以指向任何子类对象。
     ```java
     class Animal {
@@ -1894,54 +1936,3 @@ public class User implements Serializable {
 被`transient`关键字修饰的字段在对象序列化时**不会被保存下来**。这意味着如果你将一个对象序列化（比如写入到文件，或者通过网络发送），然后再反序列化（从文件读取，或者从网络接收），那么这个对象的`transient`字段将不会被恢复，而是采用其类型的默认值。对于对象类型，这个默认值是`null`；对于基本类型，例如`int`，`double`，这个默认值是`0`，`boolean`类型的默认值是`false`。
 
 `transient`关键字只影响序列化过程。在对象的生命周期内，即使属性被标记为`transient`，它仍然可以被正常地读取和写入。`transient`关键字只是告诉JVM在序列化或反序列化过程中忽略这个字段。
-
-
-
----
-
-# JavaGuide_Advanced
-
-## A. `Integer`类的实现
-```java
-public final class Integer extends Number
-        implements Comparable<Integer>, Constable, ConstantDesc {
-  @Native public static final int   MIN_VALUE = 0x80000000;
-  @Native public static final int   MAX_VALUE = 0x7fffffff;
-  
-  // ...
-
-  public static final Class<Integer>  TYPE = (Class<Integer>) Class.getPrimitiveClass("int");
-
-  // All possible chars for representing a number as a String
-  static final char[] digits = {
-          '0' , '1' , '2' , '3' , '4' , '5' ,
-          '6' , '7' , '8' , '9' , 'a' , 'b' ,
-          'c' , 'd' , 'e' , 'f' , 'g' , 'h' ,
-          'i' , 'j' , 'k' , 'l' , 'm' , 'n' ,
-          'o' , 'p' , 'q' , 'r' , 's' , 't' ,
-          'u' , 'v' , 'w' , 'x' , 'y' , 'z'
-  };
-  
-  // ...
-
-  public static String toString(int i, int radix) {
-      // ...
-  }
-  
-  // ...
-}
-```
-
-`Comparable<>`接口只包括一个方法：
-```java
-public interface Comparable<T> {
-    public int compareTo(T o);
-}
-```
-
-`@Native`真的只是一个注解：
-```java
-@Retention(RetentionPolicy.SOURCE)
-public @interface Native {
-}
-```
