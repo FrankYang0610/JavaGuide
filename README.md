@@ -198,14 +198,14 @@ boolean b = true;
     如果想要避免这样的现象，可以使用**深拷贝**。**深拷贝是原始对象的完全复制，修改深拷贝不会影响原始对象。** 如果你将一个对象的深拷贝作为方法参数，那么即使方法修改了这个对象，也不会影响原始对象。在Java中，你可以使用各种方法来创建深拷贝，具体取决于你的需求和你的对象的复杂性。例如，你可以实现`Cloneable`接口并重写`clone`方法，或者使用序列化来创建深拷贝。
 * Java中也没有类似C++中的类型重解释（`reinterpret_cast`）或C风格的强制类型转换。Java的类型系统是更强、更严格的，其类型转换必须是类型兼容的，并且在运行时还会进行类型检查。这是Java语言安全性和鲁棒性设计的一部分。
 
-### 2.4 Java对变量的存储理解
+### 2.4 Java对变量的存储
 #### 对于基本类型
 ```java
 int number = 5;
 ```
 在这个例子中，JVM执行以下步骤：
 * 在栈内存中分配一块能够存储`int`类型数据的空间。
-* 在这块内存空间中存储值`3`。
+* 在这块内存空间中存储值`5`。
 * 这块内存空间被标识符`number`标识，所以当我们在代码中写`number`，我们实际上是在引用这个内存位置的内容。
 
 #### 对于对象类型（参考`new`关键字）
@@ -684,11 +684,14 @@ mi.doSomething();  // Prints "Doing something..."
 类为创建对象提供了模板，而对象是类的实例。
 ```java
 public class Person {
-    private String name;
+    static Person DEFAULT_PERSON = new Person("DEFAULT_PERSON_NAME", 0); // 在类运行时即创建，不需要任何实例
+    private String name = "DEFAULT_NAME"; // 在对象创建时会被初始化为"DEFAULT_NAME"
     private int age;
 
-    // 构造函数
-    public Person(String name, int age) {
+    { age = 18; } // 构造器在此之后被调用
+
+    // 构造器
+    public Person(String name, int age) { // 在其他初始化完成后，构造器被调用
         this.name = name;
         this.age = age;
     }
@@ -1286,7 +1289,6 @@ class NamePrinter<T extends HasName> {
 
 ```java
 package com.example;
-
 public class Base {
     private int privateVar;
     int defaultVar;
@@ -1294,8 +1296,8 @@ public class Base {
     public int publicVar;
 }
 
-package com.example;
 
+package com.example;
 class SamePackageClass {
     void method() {
         Base b = new Base();
@@ -1307,7 +1309,6 @@ class SamePackageClass {
 }
 
 package com.another;
-
 class DifferentPackageSubclass extends Base { 
     void method() {
         // this.privateVar; // 不可访问
@@ -1318,14 +1319,49 @@ class DifferentPackageSubclass extends Base {
 }
 ```
 
-包导入**不具有传递性**：如果包C导入包B，它不会自动导入包A，即使包B导入了包A。
+包导入**不具有传递性**：如果包C导入包B，它不会自动导入包A，即使包B导入了包A。**导入（Import）** 和 **依赖（Dependency）** 在Java中是两个不同的概念：
+* 导入（Import）：用于简化类名的引用，使我们能够在源文件中使用类的简单名称而无需使用全限定名。例如，使用`import java.util.List;`后，代码中可以直接使用`List`而不是`java.util.List`。
+* 依赖（Dependency）：指的是一个类或包在编译或运行时所需的其他类或包。即使不使用`import`语句，Java编译器仍然可以根据全限定名找到所需的类。
+* JVM实现了必要的模块化，在使用、编译和运行一个包的时候不必要考虑它的依赖。这涉及到了以下技术：
+  * 封装
+  * 每个模块在`module-info.java`文件中声明其直接依赖项
+  * 运行时加载：Java 使用 **类加载器（ClassLoader）** 机制，在运行时动态加载所需的类。这类似于动态链接库（如 `.dll`、`.so` 文件）的动态加载，允许应用程序在需要时加载和卸载类。
 
-包的目的有：
+包的目的主要有：
 * 避免命名冲突：不同包中的类可以有相同的名称。
 * 控制访问：包提供了一个访问控制的边界。
 * 更好的组织：让代码结构更清晰，便于管理和维护。
 
-编译时需要指定包的路径。运行时需要正确设置类路径（classpath）。
+编译时需要指定包的路径。运行时需要正确设置类路径（classpath），见**13.3**节。
+
+### 13.3 classpath和类加载器
+在Java中，**类加载器（Class Loader）** 负责在运行时动态加载类。默认的类加载器通过搜索在`classpath`中定义的一组路径来查找和加载类。
+
+`classpath`是一组路径，用于指定JVM和Java工具（如javac、java等）在查找类和资源文件时所要搜索的目录或`.jar`文件。比如：
+```
+c:\jdk\src;d:\mylib\src;
+```
+
+* 可以将`classpath`设置为系统的环境变量，这样所有Java应用都可以共享这个设置。
+  ```
+  c:\> set CLASSPATH=c:\jdk\lib;d:\mylib1;
+  ```
+* 在执行Java命令时，可以通过`-classpath`或`-cp`参数指定`classpath`。这种方式的优先级高于环境变量中的设置。
+  ```
+  c:\> java -classpath c:\jdk\lib;d:\mylib2 <其他参数>
+  ```
+  * 使用命令行参数设置的`classpath`会覆盖环境变量中设置的`classpath`。
+  * 如果未显式设置`classpath`，默认的`classpath`仅包含当前工作目录（即`.`）。
+
+`java.lang`等标准Java包确实能被Java程序默认识别和使用，**但它们并不是通过用户设定的`classpath`来加载的**。Java的类加载器采用**父母委托模型（Parent Delegation Model）**，该模型规定了类加载器之间的委托关系，确保在类加载过程中，类加载请求会按照特定的顺序逐级传递，直到被最顶层的类加载器（通常是启动类加载器）处理。类加载器主要分为以下几种类型：
+* 启动类加载器（Bootstrap Class Loader）
+  * 用于加载Java核心库，如`java.lang.*`、`java.util.*`等。通常来自于JVM内部的核心库（如`rt.jar`，在Java 9及以后版本中则通过模块系统提供）。启动类加载器不使用用户设置的`classpath`，而是使用JVM内部预定义的路径。
+* 扩展类加载器（Extension Class Loader）
+  * 用于加载Java扩展库，通常位于`jre/lib/ext`目录下的`.jar`文件或由系统属性`java.ext.dirs`指定的目录。它同样不依赖用户直接设置的`classpath`，而是依赖于JVM的扩展库路径。
+* 应用程序类加载器（Application/System Class Loader）
+  * 用于加载应用程序的类和第三方库。**它依赖于用户通过环境变量`classpath`或命令行参数`-classpath/-cp`设置的路径。**
+* 自定义类加载器（Custom Class Loader）
+  * 用于允许开发者根据需要自定义类的加载方式，通常用于特定的需求，如动态加载、热部署等。可以通过编程方式指定加载路径或策略。
 
 ## 十四、文件读写
 ### 14.1 读文件
