@@ -1813,7 +1813,7 @@ class Counter {
 以下操作是原子的：
 * 基本数据类型的读取和赋值：除`long`和`double`外，其他基本类型的读写是原子的。
 * 引用类型的赋值：引用的读写也是原子的。
-* 原子类：如`AtomicInteger`、`AtomicLong`和`AtomicBoolean`提供了原子的操作方法，例如`AtomicInteger`的 `incrementAndGet`方法。
+* 原子类：如`AtomicInteger`、`AtomicLong`和`AtomicBoolean`提供了原子的操作方法，例如`AtomicInteger`的`incrementAndGet`方法。
 
 **【联系`synchronized`关键字】** `volatile`和`synchronized`都是Java中用于处理多线程环境下的可见性和同步问题的关键字，但它们的工作方式和使用场景有所不同。
 * 原子性
